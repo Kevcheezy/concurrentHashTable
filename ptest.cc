@@ -55,7 +55,7 @@ void test1(HashMap *htable, int n, int k, int w){
 
 HashMap hash;
 int NUMKEYS=1000;
-#define NumberofThread 1
+#define NumberofThread 10
 pthread_t thr[NumberofThread];
 
 void *tfunc(void *arg){
@@ -96,9 +96,11 @@ void test(){
 	//  Stop timers
 	double wall1 = get_wall_time();
 	double cpu1  = get_cpu_time();
+	double overhead = (wall1-wall0)/NumberofThread;
 	cout << "Wall Time = " << wall1 - wall0 << "s"<<endl;
     	cout << "CPU Time  = " << cpu1  - cpu0  << "s"<<endl;
 	cout << "Throughput= " << (4*NUMKEYS+8)/(wall1 - wall0)  << "/s"<<endl;
+	cout << "Avg overhead = " << overhead  << endl;
 		
 }
 
@@ -164,4 +166,3 @@ int main( int argc, char *argv[])
     }
     return 0;
 }
-
