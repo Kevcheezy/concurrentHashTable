@@ -49,7 +49,7 @@ HashMap::HashMap() {
 }
 
 int HashMap:: get(int key) {
-  usleep(1);
+  // usleep(1);
 #ifdef RWLOCK
   lock.startRead(); //(2) begin reading
 #else
