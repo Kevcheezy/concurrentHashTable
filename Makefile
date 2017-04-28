@@ -47,5 +47,5 @@ run4:
 
 
 clean:
-	rm *.o hashchain phashchain phashcoarse phashcoarserw  phashfine phashfinerw
+	rm *.o phashchain phashcoarse phashcoarserw  phashfine phashfinerw
 

@@ -65,13 +65,7 @@ pthread_mutex_t* RWLock:: getm_mutex(){
 #endif
 
 
-
 RWLock:: ~RWLock(){
-#ifdef RWLOCK
   pthread_mutex_unlock(&m_mutex);
   pthread_mutex_destroy(&m_mutex);
-#else
-  pthread_mutex_unlock(&m_mutex);
-  pthread_mutex_destroy(&m_mutex);
-#endif
 }

@@ -22,32 +22,36 @@ int LinkedHashEntry:: getKey() {
 
 int 
 LinkedHashEntry:: getValue() {
-            return value;
-      }
+  return value;
+}
  
 void LinkedHashEntry:: setValue(int value) {
-#ifdef FINEGRAIN
+#if defined FINEGRAIN && !defined RWLOCK 
   pthread_mutex_lock(entryLock.getm_mutex()); //(3)
-#endif
   this->value = value;
-#ifdef FINEGRAIN
   pthread_mutex_unlock(entryLock.getm_mutex()); //(3)
+#else
+  entryLock.startWrite(); //(4)
+  this->value = value;
+  entryLock.doneWrite(); //(4)
 #endif		    
 }
  
 
 LinkedHashEntry * 
 LinkedHashEntry:: getNext() {
-            return next;
+  return next;
 }
  
 void LinkedHashEntry:: setNext(LinkedHashEntry *next) {
-#ifdef FINEGRAIN
+#if defined FINEGRAIN && !defined RWLOCK
   pthread_mutex_lock(entryLock.getm_mutex()); //(3)
-#endif
   this->next = next;
-#ifdef FINEGRAIN
   pthread_mutex_unlock(entryLock.getm_mutex()); //(3)
+#else
+  entryLock.startWrite(); //(4)
+  this->next = next;
+  entryLock.doneWrite(); //(4)
 #endif	
 }
 

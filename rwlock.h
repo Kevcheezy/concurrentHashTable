@@ -6,16 +6,16 @@ class RWLock{
 private:
 #ifdef RWLOCK
   
-  // Placeholder (DO NOT IMPLEMENT)
-  pthread_rwlock_t rwlock;
   // Mutex lock
   pthread_mutex_t m_mutex=PTHREAD_MUTEX_INITIALIZER;
   // Num. readers waiting
   int readersWaiting;
+  
   // Flag for if a writer is waiting (0:No/1:Yes)
   int flagWriterWaiting;
+  
   // PThread conditional variable
-  pthread_cond_t condVar = PTHREAD_COND_INITIALIZER;
+  pthread_cond_t condVar=PTHREAD_COND_INITIALIZER;
 
 #else 
   pthread_mutex_t m_mutex=PTHREAD_MUTEX_INITIALIZER; 
