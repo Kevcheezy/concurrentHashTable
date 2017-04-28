@@ -7,15 +7,28 @@ private:
 #ifdef RWLOCK
   
   // Mutex lock
-  pthread_mutex_t m_mutex=PTHREAD_MUTEX_INITIALIZER;
+  pthread_mutex_t m_mutex;
+  
   // Num. readers waiting
   int readersWaiting;
+
+  // Num. readers active
+  int readersActive;
   
-  // Flag for if a writer is waiting (0:No/1:Yes)
-  int flagWriterWaiting;
+  // Num. writers active
+  int writersActive;
+
+  // Num writers waiting
+  int writersWaiting;
   
-  // PThread conditional variable
-  pthread_cond_t condVar=PTHREAD_COND_INITIALIZER;
+  // PThread reading/writing conditional variable
+  pthread_cond_t readCondVar;
+  pthread_cond_t writeCondVar;
+
+  // Flag
+  int flag;
+
+
 
 #else 
   pthread_mutex_t m_mutex=PTHREAD_MUTEX_INITIALIZER; 
