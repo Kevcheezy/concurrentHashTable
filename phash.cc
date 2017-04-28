@@ -50,17 +50,17 @@ HashMap::HashMap() {
 
 int HashMap:: get(int key) {
   //@@@  Mutex lock here @@@
-  //pthread_mutex_lock(&m_mutex); //(1) works
 #ifdef RWLOCK
+  lock.startRead(); //(2) begin reading
 #else
-  pthread_mutex_lock(lock.getm_mutex());
+  pthread_mutex_lock(lock.getm_mutex()); //(1) lock
   #endif
   int hash = (key % TABLE_SIZE);
   if (table[hash] == NULL){
-    // pthread_mutex_unlock(&m_mutex); //(1) works
     #ifdef RWLOCK
+    lock.doneRead(); //(2) done reading
     #else
-    pthread_mutex_unlock(lock.getm_mutex());
+    pthread_mutex_unlock(lock.getm_mutex()); //(1) unlock
     #endif
     return -1;
   }
@@ -69,35 +69,35 @@ int HashMap:: get(int key) {
     while (entry != NULL && entry->getKey() != key)
       entry = entry->getNext();
     if (entry == NULL){
-      //pthread_mutex_unlock(&m_mutex); //(1) works
       #ifdef RWLOCK
+      lock.doneRead(); //(2) done reading
       #else
-      pthread_mutex_unlock(lock.getm_mutex());
+      pthread_mutex_unlock(lock.getm_mutex()); //(1) unlock
       #endif
       return -1;
     }
     else{
-      //pthread_mutex_unlock(&m_mutex); //(1) works
       #ifdef RWLOCK
+      lock.doneRead(); //(2) done reading
       #else
-      pthread_mutex_unlock(lock.getm_mutex());
+      pthread_mutex_unlock(lock.getm_mutex()); //(1) unlock
       #endif
 	return entry->getValue();
     }
   }
  // @@ Mutex unlock here @@
- // pthread_mutex_unlock(&m_mutex); //(1) works
   #ifdef RWLOCK
+  lock.doneRead(); //(2) done reading
   #else
-  pthread_mutex_unlock(lock.getm_mutex());
+  pthread_mutex_unlock(lock.getm_mutex()); // (1) unlock
   #endif
 }
- 
+  
 void HashMap::put(int key, int value) {
-  // pthread_mutex_lock(&m_mutex); //(1) works
   #ifdef RWLOCK
+  lock.startWrite(); //(2) begin write
   #else
-  pthread_mutex_lock(lock.getm_mutex());
+  pthread_mutex_lock(lock.getm_mutex()); //(1) lock
   #endif
   int hash = (key % TABLE_SIZE);
   if (table[hash] == NULL)
@@ -113,6 +113,7 @@ void HashMap::put(int key, int value) {
   }
   //pthread_mutex_unlock(&m_mutex);//(1) works
   #ifdef RWLOCK
+  lock.doneWrite(); //(2) done writing
   #else
   pthread_mutex_unlock(lock.getm_mutex());
   #endif
@@ -120,10 +121,10 @@ void HashMap::put(int key, int value) {
  
 
 void HashMap:: remove(int key) {
-  //pthread_mutex_lock(&m_mutex);//(1) works
   #ifdef RWLOCK
+  lock.startWrite(); //(2) begin writing
   #else
-  pthread_mutex_unlock(lock.getm_mutex());
+  pthread_mutex_unlock(lock.getm_mutex()); // (1) lock
   #endif
   int hash = (key % TABLE_SIZE);
   if (table[hash] != NULL) {
@@ -146,10 +147,10 @@ void HashMap:: remove(int key) {
       }
     }
   }
-  //pthread_mutex_unlock(&m_mutex);//(1) works
   #ifdef RWLOCK
+  lock.doneWrite(); //(2) done writing
   #else
-  pthread_mutex_unlock(lock.getm_mutex());
+  pthread_mutex_unlock(lock.getm_mutex()); //(1) unlock
   #endif
 }
  

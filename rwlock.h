@@ -5,9 +5,20 @@
 class RWLock{
 private:
 #ifdef RWLOCK
-  pthread_rwlock_t rwlock ;
+  
+  // Placeholder (DO NOT IMPLEMENT)
+  pthread_rwlock_t rwlock;
+  // Mutex lock
+  pthread_mutex_t m_mutex=PTHREAD_MUTEX_INITIALIZER;
+  // Num. readers waiting
+  int readersWaiting;
+  // Flag for if a writer is waiting (0:No/1:Yes)
+  int flagWriterWaiting;
+  // PThread conditional variable
+  pthread_cond_t condVar = PTHREAD_COND_INITIALIZER;
+
 #else 
-        pthread_mutex_t m_mutex=PTHREAD_MUTEX_INITIALIZER; 
+  pthread_mutex_t m_mutex=PTHREAD_MUTEX_INITIALIZER; 
 #endif
  
 public:
@@ -15,17 +26,25 @@ public:
     	~RWLock();
 	
 #ifdef RWLOCK
-	pthread_rwlock_t* getrwlock();
+	
+	// readersWaiting helper functions
+	// (maybe not needed)
+	void incrReadersWaiting();
+	void decrReadersWaiting();
+	int getReadersWaiting();
+	
+	//Reader
+    	void startRead();
+    	void doneRead();
+	
+	// Writer
+    	void startWrite();
+    	void doneWrite();
+	
 #else
 	// Getter for mutex lock
 	pthread_mutex_t* getm_mutex();
 #endif
 
-    //Reader
-    	void startRead();
-    	void doneRead();
-    // Writer
-    	void startWrite();
-    	void  doneWrite();
 };
 
