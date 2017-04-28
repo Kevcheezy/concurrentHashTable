@@ -5,6 +5,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <pthread.h>
+#include <cstdlib>
 //#include <cstdlib>
 //#include <string>
 //#include <cstdio>
@@ -54,7 +55,7 @@ void test1(HashMap *htable, int n, int k, int w){
 
 HashMap hash;
 int NUMKEYS=1000;
-#define NumberofThread 2
+#define NumberofThread 100
 pthread_t thr[NumberofThread];
 
 void *tfunc(void *arg){
@@ -106,8 +107,10 @@ int main( int argc, char *argv[])
 {
     int key, value;
     int choice;
-    //NumberOfThread = argv[1];
-    //cout<<"Number of threads is : " << argv[1]<<endl;
+    int numThreads = atoi(argv[1]);
+    #undef NumberOfThread
+    #define NumberOfThread numThreads
+    //cout<<"Number of threads is : " << numThreads <<endl;
     test();
 
     while (1)
