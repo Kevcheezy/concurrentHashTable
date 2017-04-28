@@ -8,7 +8,7 @@
 
 #include <iostream>
 #include "phash.h"
-
+#include <unistd.h>
 
 LinkedHashEntry:: LinkedHashEntry(int key, int value) {
             this->key = key;
@@ -66,6 +66,7 @@ HashMap::HashMap() {
 
 int HashMap:: get(int key) {
   //@@@  Mutex lock here @@@
+  // usleep(1);
 #ifdef RWLOCK
   lock.startRead(); //(2) begin reading
 #else
