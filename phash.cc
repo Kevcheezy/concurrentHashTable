@@ -49,7 +49,6 @@ HashMap::HashMap() {
 }
 
 int HashMap:: get(int key) {
-  //@@@  Mutex lock here @@@
 #ifdef RWLOCK
   lock.startRead(); //(2) begin reading
 #else
