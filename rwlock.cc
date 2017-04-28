@@ -10,17 +10,7 @@ RWLock:: RWLock(){
 }
 
 #ifdef RWLOCK
-void RWLock:: incrReadersWaiting(){
-  readersWaiting++;
-}
 
-void RWLock:: decrReadersWaiting(){
-  readersWaiting--;
-}
-
-int RWLock:: getReadersWaiting(){
-  return readersWaiting;
-}
 
 void RWLock:: startRead(){
   int waitRetVal;

@@ -11,6 +11,10 @@ private:
       int key;
       int value;
       LinkedHashEntry *next;
+#ifdef FINEGRAIN
+      RWLock entryLock;
+#endif
+      
 public:
       LinkedHashEntry(int key, int value); 
       int getKey(); 

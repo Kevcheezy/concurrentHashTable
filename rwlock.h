@@ -25,14 +25,8 @@ public:
     	RWLock();
     	~RWLock();
 	
-#ifdef RWLOCK
-	
-	// readersWaiting helper functions
-	// (maybe not needed)
-	void incrReadersWaiting();
-	void decrReadersWaiting();
-	int getReadersWaiting();
-	
+#ifdef RWLOCK 
+		
 	//Reader
     	void startRead();
     	void doneRead();
