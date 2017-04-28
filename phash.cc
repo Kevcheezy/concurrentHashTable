@@ -9,12 +9,13 @@
 #include <iostream>
 #include "phash.h"
 #include <unistd.h>
+#include "rwlock.h"
 
 LinkedHashEntry:: LinkedHashEntry(int key, int value) {
             this->key = key;
             this->value = value;
             this->next = NULL;
-      }
+}
 
 int LinkedHashEntry:: getKey() {
   return key;
@@ -23,7 +24,7 @@ int LinkedHashEntry:: getKey() {
 int 
 LinkedHashEntry:: getValue() {
             return value;
-      }
+}
  
 void LinkedHashEntry:: setValue(int value) {
   this->value = value;
@@ -33,7 +34,7 @@ void LinkedHashEntry:: setValue(int value) {
 LinkedHashEntry * 
 LinkedHashEntry:: getNext() {
             return next;
-      }
+}
  
 void LinkedHashEntry:: setNext(LinkedHashEntry *next) {
   this->next = next;
@@ -43,7 +44,8 @@ void LinkedHashEntry:: setNext(LinkedHashEntry *next) {
 const int TABLE_SIZE = 128;
  
 HashMap::HashMap() {
-  table = new LinkedHashEntry*[TABLE_SIZE];
+  rwMapLock = RWLock();
+  table = new LinkedHash2Entry*[TABLE_SIZE];
   for (int i = 0; i < TABLE_SIZE; i++)
     table[i] = NULL;
 }
@@ -51,16 +53,16 @@ HashMap::HashMap() {
 int HashMap:: get(int key) {
   // usleep(1);
 #ifdef RWLOCK
-  lock.startRead(); //(2) begin reading
+  rwMapLock.startRead(); //(2) begin reading
 #else
-  pthread_mutex_lock(lock.getm_mutex()); //(1) lock
+  pthread_mutex_lock(rwMapLock.getmutex()); //(1) lock
   #endif
   int hash = (key % TABLE_SIZE);
   if (table[hash] == NULL){
     #ifdef RWLOCK
-    lock.doneRead(); //(2) done reading
+    rwMapLock.doneRead(); //(2) done reading
     #else
-    pthread_mutex_unlock(lock.getm_mutex()); //(1) unlock
+    pthread_mutex_unlock(rwMapLock.getmutex()); //(1) unlock
     #endif
     return -1;
   }
@@ -70,34 +72,34 @@ int HashMap:: get(int key) {
       entry = entry->getNext();
     if (entry == NULL){
       #ifdef RWLOCK
-      lock.doneRead(); //(2) done reading
+      rwMapLock.doneRead(); //(2) done reading
       #else
-      pthread_mutex_unlock(lock.getm_mutex()); //(1) unlock
+      pthread_mutex_unlock(rwMapLock.getmutex()); //(1) unlock
       #endif
       return -1;
     }
     else{
       #ifdef RWLOCK
-      lock.doneRead(); //(2) done reading
+      rwMapLock.doneRead(); //(2) done reading
       #else
-      pthread_mutex_unlock(lock.getm_mutex()); //(1) unlock
+      pthread_mutex_unlock(rwMapLock.getmutex()); //(1) unlock
       #endif
 	return entry->getValue();
     }
   }
  // @@ Mutex unlock here @@
   #ifdef RWLOCK
-  lock.doneRead(); //(2) done reading
+  rwMapLock.doneRead(); //(2) done reading
   #else
-  pthread_mutex_unlock(lock.getm_mutex()); // (1) unlock
+pthread_mutex_unlock(rwMapLock.getmutex()); // (1) unlock
   #endif
 }
   
 void HashMap::put(int key, int value) {
   #ifdef RWLOCK
-  lock.startWrite(); //(2) begin write
+  rwMapLock.startWrite(); //(2) begin write
   #else
-  pthread_mutex_lock(lock.getm_mutex()); //(1) lock
+  pthread_mutex_lock(rwMapLock.getmutex()); //(1) lock
   #endif
   int hash = (key % TABLE_SIZE);
   if (table[hash] == NULL)
@@ -111,20 +113,19 @@ void HashMap::put(int key, int value) {
     else
       entry->setNext(new LinkedHashEntry(key, value));
   }
-  //pthread_mutex_unlock(&m_mutex);//(1) works
   #ifdef RWLOCK
-  lock.doneWrite(); //(2) done writing
+  rwMapLock.doneWrite(); //(2) done writing
   #else
-  pthread_mutex_unlock(lock.getm_mutex());
+  pthread_mutex_unlock(rwMapLock.getmutex()); //(1)
   #endif
 }
  
 
 void HashMap:: remove(int key) {
   #ifdef RWLOCK
-  lock.startWrite(); //(2) begin writing
+  rwMapLock.startWrite(); //(2) begin writing
   #else
-  pthread_mutex_unlock(lock.getm_mutex()); // (1) lock
+  pthread_mutex_unlock(rwMapLock.getmutex()); // (1) lock
   #endif
   int hash = (key % TABLE_SIZE);
   if (table[hash] != NULL) {
@@ -148,9 +149,9 @@ void HashMap:: remove(int key) {
     }
   }
   #ifdef RWLOCK
-  lock.doneWrite(); //(2) done writing
+  rwMapLock.doneWrite(); //(2) done writing
   #else
-  pthread_mutex_unlock(lock.getm_mutex()); //(1) unlock
+  pthread_mutex_unlock(rwMapLock.getmutex()); //(1) unlock
   #endif
 }
  

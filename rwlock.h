@@ -1,4 +1,8 @@
 //#include<stdio.h>
+
+#ifndef RWLOCK_H
+#define RWLOCK_H
+
 #include<pthread.h>
 #include<semaphore.h>
 
@@ -6,8 +10,6 @@ class RWLock{
 private:
 #ifdef RWLOCK
   
-  // Mutex lock
-  pthread_mutex_t m_mutex;
   
   // Num. readers waiting
   int readersWaiting;
@@ -25,21 +27,16 @@ private:
   pthread_cond_t readCondVar;
   pthread_cond_t writeCondVar;
 
-  // Flag
-  int flag;
-
-
-
-#else 
-  pthread_mutex_t m_mutex=PTHREAD_MUTEX_INITIALIZER; 
 #endif
+  // Mutex lock
+  pthread_mutex_t m_mutex=PTHREAD_MUTEX_INITIALIZER; 
+
  
 public:
     	RWLock();
     	~RWLock();
 	
-#ifdef RWLOCK 
-		
+	pthread_mutex_t* getmutex();	
 	//Reader
     	void startRead();
     	void doneRead();
@@ -47,11 +44,6 @@ public:
 	// Writer
     	void startWrite();
     	void doneWrite();
-	
-#else
-	// Getter for mutex lock
-	pthread_mutex_t* getm_mutex();
-#endif
-
+      
 };
-
+#endif

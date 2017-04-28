@@ -1,34 +1,22 @@
 #include "rwlock.h"
+#include <pthread.h>
 
 RWLock:: RWLock(){
 #ifdef RWLOCK
-  this->readersWaiting = 0;
-  this->readersActive = 0;
-  this->writersActive = 0;
-  int stat;
-  stat = pthread_mutex_init(&m_mutex, NULL);
-  if(stat != 0) return;
-  stat = pthread_cond_init(&readCondVar,NULL);
-  if( stat != 0){
-    pthread_mutex_destroy(&m_mutex);
-    return;
-  }
-  stat = pthread_cond_init(&writeCondVar, NULL);
-  if( stat != 0){
-    pthread_cond_destroy(&readCondVar);
-    pthread_mutex_destroy(&m_mutex);
-    return;
-  }
-  flag = 1;
+  readersWaiting = 0;
+  readersActive = 0;
+  writersActive = 0;
+  writersWaiting = 0;
+  pthread_cond_init(&readCondVar, NULL);
+  pthread_cond_init(&writeCondVar, NULL);
 
-#else
-  pthread_mutex_init(&m_mutex,NULL);
 #endif
+  pthread_mutex_init(&m_mutex, NULL);
 }
 
-#ifdef RWLOCK
-
-
+pthread_mutex_t* RWLockL::getmutex(){
+  return &m_mutex;
+}
 void RWLock:: startRead(){
   int stat;
   stat = pthread_mutex_lock(&m_mutex);
@@ -47,64 +35,50 @@ void RWLock:: startRead(){
 
 void RWLock:: doneRead(){
 
-  int stat;
-  int stat1;
-
-  stat = pthread_mutex_lock(&m_mutex);
-  if(stat != 0) return;
-  readersActive--;
-  if (readersActive == 0 && writersWaiting > 0){
-    stat = pthread_cond_signal(&writeCondVar);
+  pthread_mutex_lock(&m_mutex);
+#ifdef RWLOCK
+  readersWaiting++;
+  while(writersWaiting != 0 || writersActive!=0){
+    pthread_cond_wait(&readCondVar, &m_mutex);
   }
-  stat1 = pthread_mutex_unlock(&m_mutex);
+  readersWaiting--;
+  readersActive++;
+  pthread_mutex_unlock(&m_mutex);
+#endif
 }
 
 void RWLock::startWrite(){
-  int stat;
-  stat = pthread_mutex_lock(&m_mutex);
-  if(stat != 0) return;
-  if(writersActive || readersActive > 0){
-    writersWaiting++;
-    while(writersActive || readersActive > 0){
-      stat = pthread_cond_wait(&writeCondVar, &m_mutex);
-      if(stat != 0) break;
-    }
-    writersWaiting--;  
+  pthread_mutex_lock(&m_mutex);
+#ifdef RWLOCK
+  writersWaiting++;
+  while(writersActive!=0 || readersActive!=0){
+    pthread_cond_wait(&writeCondVar, &m_mutex);
   }
-  if (stat == 0) writersActive = 1;
+  writersWaiting--;
+  writersActive++;
   pthread_mutex_unlock(&m_mutex);
+#endif
 }
 
 void RWLock:: doneWrite(){
-  int stat;
-  stat = pthread_mutex_lock(&m_mutex);
-  if (stat != 0) return;
-  writersActive = 0;
-  if(readersWaiting > 0){
-    stat = pthread_cond_broadcast(&readCondVar);
-    if(stat != 0){
-      pthread_mutex_unlock(&m_mutex);
-      return;
-    }
+#ifdef RWLOCK
+  pthread_mutex_lock(&m_mutex);
+  writersActive--;
+  if(writersWaiting > 0 ){
+    pthread_cond_signal(&writeCondVar);
   }
-  else if (writersWaiting > 0){
-    stat = pthread_cond_signal(&writeCondVar);
-    if(stat != 0){
-      pthread_mutex_unlock(&m_mutex);
-      return;
-    }
+  else{
+    pthread_cond_signal(&readCondVar);
   }
-  stat = pthread_mutex_unlock(&m_mutex);
-}
-
-#else
-pthread_mutex_t* RWLock:: getm_mutex(){
-  return &m_mutex;
-}
 #endif
+  pthread_mutex_unlock(&m_mutex);
+}
 
 
 RWLock:: ~RWLock(){
-  pthread_mutex_unlock(&m_mutex);
-  pthread_mutex_destroy(&m_mutex);
+#ifdef RWLOCK
+pthread_mutex_unlock(&readCondVar);
+pthread_mutex_destroy(&writeCondVar);
+#endif
+pthread_mutex_destroy(&m_mutex);
 }

@@ -3,7 +3,6 @@
  *http://www.algolist.net/Data_structures/Hash_table/Chaining
  *
  **/
-#include <pthread.h>
 #include "rwlock.h"
 
 class LinkedHashEntry {
@@ -11,16 +10,13 @@ private:
       int key;
       int value;
       LinkedHashEntry *next;
-#ifdef FINEGRAIN
       RWLock entryLock;
-#endif
       
 public:
       LinkedHashEntry(int key, int value); 
       int getKey(); 
       int getValue();
       void setValue(int value);
- 
       LinkedHashEntry *getNext(); 
       void setNext(LinkedHashEntry *next); 
 };
@@ -29,7 +25,11 @@ public:
 class HashMap {
 private:
       LinkedHashEntry **table;
-      RWLock lock;
+#ifndef FINEGRAIN
+      RWLock rwMapLock;
+#else
+      RWLock* rwEntrylock;
+#endif
 public:
       HashMap(); 
       int get(int key); 
@@ -37,5 +37,4 @@ public:
       void remove(int key); 
       ~HashMap(); 
 };
-
 
